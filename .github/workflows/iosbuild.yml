@@ -60,13 +60,15 @@ jobs:
       
       - name: Run simulator and record
         run: |
-          xcrun simctl boot "iPhone SE (3rd generation)"
-          xcrun simctl install booted "platforms/ios/build/Debug-iphonesimulator/To Do List Lizet.app"
-          xcrun simctl launch booted io.ionic.starter
-          sleep 30
-          xcrun simctl io booted recordVideo --type=mp4 demo.mp4 &
-          sleep 20
-          kill %1
+          UDID=$(xcrun simctl list devices available | grep "iPhone SE (3rd generation)" | head -1 | grep -E -o -i "([0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12})")
+          xcrun simctl boot $UDID || true
+          sleep 15
+          APP_PATH=$(find platforms/ios/build/Debug-iphonesimulator -name "*.app" -type d | head -1)
+          xcrun simctl install $UDID "$APP_PATH"
+          xcrun simctl launch $UDID io.ionic.starter
+          xcrun simctl io $UDID recordVideo --type=mp4 "$GITHUB_WORKSPACE/demo.mp4" &
+          sleep 25
+          kill %1 || true
 
       - name: Upload video
         uses: actions/upload-artifact@v4
