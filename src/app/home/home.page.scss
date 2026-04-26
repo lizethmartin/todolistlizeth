@@ -1,0 +1,20 @@
+.info-container {
+  display: flex;
+  flex-direction: column;
+}
+.card-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.right {
+  text-align: right;
+}
+
+.scroll-title {
+  min-height: 6.2vh;   
+  max-height: 6.2vh;  
+  max-width: 72%;
+  overflow-y: auto;   
+}

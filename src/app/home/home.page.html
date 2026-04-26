@@ -1,0 +1,168 @@
+<ion-header>
+  <ion-toolbar color="light">
+    <div class="py-10">
+      <ion-title color="primary" slot="start">Hola Lizeth!</ion-title>
+    </div>
+  </ion-toolbar>
+
+  <!-- -->
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-grid>
+    <ion-row>
+      <!-- To Do List -->
+      <ion-col size="12" size-md="8">
+        <!-- Category Filter - if feature flag is true -->
+        <ion-toolbar *ngIf="flags.showFilters">
+          <ion-segment [scrollable]="true" [value]="filteredCategory.id"
+            (ionChange)="filter($event.detail.value?.toString() ?? 'all')">
+            <ion-segment-button value="all">
+              <ion-label>Todas</ion-label>
+            </ion-segment-button>
+            <ion-segment-button *ngFor="let cat of categories" [value]="cat.id">
+              <ion-label>{{ cat.name }}</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </ion-toolbar>
+
+        <!-- Filtered Category Options-->
+        <ion-toolbar>
+          <!-- Left button -->
+          <ion-buttons slot="start" *ngIf="filteredCategory.id !=='others' && filteredCategory.id !=='all'">
+            <ion-button color="warning" fill="outline" shape="round" (click)="changeDataCategory()" class="ion-margin-top" slot="end">
+              <ion-icon name="create-outline" slot="icon-only" /> Editar
+            </ion-button>
+          </ion-buttons>
+
+          <!-- Category name -->
+          <ion-title class="ion-text-center">
+            {{filteredCategory.name}}
+          </ion-title>
+
+          <!-- Rigth button -->
+          <ion-buttons slot="end" *ngIf="filteredCategory.id !=='others' && filteredCategory.id !=='all'">
+            <ion-button color="danger" slot="icon-only" (click)="deleteCategory(filteredCategory)" class="ion-margin-top">
+              <ion-icon name="trash-outline" slot="icon-only" />
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+
+        <ion-note class="ion-padding-start">
+          {{ pendientes }} pendiente(s) de {{ tasks.length }}
+        </ion-note>
+
+        <!-- Filtered tasks Options-->
+        <ion-grid>
+          <ion-row>
+            <ion-col size="12" size-md="6" size-lg="4" *ngFor="let task of tasks">
+              <ion-card>
+                <ion-card-header>
+                  <ion-card-subtitle class="right">
+                    <ion-badge [color]="getCategoryColor(task.categoryId)" class="mb-1">
+                      {{ getCategoryName(task.categoryId) }}
+                    </ion-badge>
+                  </ion-card-subtitle>
+                  <div class="card-header">
+                    <ion-card-title [class.completed]="task.completed"  class="scroll-title">
+                      {{ task.title }}
+                    </ion-card-title>
+                    <ion-badge [color]="task.completed ? 'success-light' : 'danger-light'">
+                      {{ task.completed ? 'Completada' : 'Pendiente' }}
+                    </ion-badge>
+                  </div>
+                </ion-card-header>
+
+                <ion-card-content>
+                  <div class="ion-text-center">
+                    <ion-button [color]="!task.completed ? 'success' : 'warning'" (click)="completeTask(task.id)" class="ion-margin-top">
+                      {{!task.completed ? 'Completar tarea' : 'Tarea pendiente'}}
+                    </ion-button>
+                    <ion-button color="danger" fill="outline" (click)="delete(task.id, true)" class="ion-margin-top">
+                      <ion-icon name="trash-outline"></ion-icon>&nbsp; Eliminar
+                    </ion-button>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-col>
+
+      <!-- Actions -->
+      <ion-col size="12" size-md="4">
+        <ion-card *ngIf="editCategory">
+          <ion-card-header>
+            <ion-card-title>Editar</ion-card-title>
+            <ion-card-subtitle>Editar categoría - {{filteredCategory.name}}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item lines="full">
+              <ion-input labelPlacement="floating" [(ngModel)]="updateCategory.name"
+                (keyup.enter)="sendEditedCategory()">
+                <div slot="label">Nombre</div>
+              </ion-input>
+            </ion-item>
+            <div class="ion-text-center">
+              <ion-button color="warning" (click)="sendEditedCategory()" class="ion-margin-top">
+                Editar categoría
+              </ion-button>
+              <ion-button color="danger" fill="outline" (click)="cancelEditedCategory()" class="ion-margin-top">
+                Cancelar
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Nueva categoría</ion-card-title>
+            <ion-card-subtitle>Agrega una nueva categoría</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item lines="full">
+              <ion-input labelPlacement="floating" [(ngModel)]="newCategory" placeholder="Nueva categoría..."
+                (keyup.enter)="add(false)">
+                <div slot="label">Nombre <ion-text color="danger" class="text-sm">(Requerido)</ion-text></div>
+              </ion-input>
+            </ion-item>
+            <ion-button expand="block" (click)="add(false)" class="ion-margin-top">
+              Agregar categoría
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Nueva asignación</ion-card-title>
+            <ion-card-subtitle>Agrega una nueva asignación</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <!-- Show category select if feature flag is true-->
+            <ion-item *ngIf="flags.showCategories" lines="full">
+              <ion-select label="Categoría" label-placement="floating" [(ngModel)]="selectedCategory"
+                interface="popover" placeholder="Select fruit">
+                <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
+                  {{ cat.name }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-text color="medium" class="pl-4" *ngIf="flags.showCategories" lines="full">
+              <small>Si no selecciona una categoría se agregara a otros.</small>
+            </ion-text>
+            <ion-item lines="full">
+              <ion-input labelPlacement="floating" [(ngModel)]="newTask" placeholder="Nueva asignación..."
+                (keyup.enter)="add(true)">
+                <div slot="label">Asignación <ion-text color="danger" class="text-sm">(Requerido)</ion-text></div>
+              </ion-input>
+            </ion-item>
+            <ion-button expand="block" (click)="add(true)" class="ion-margin-top">
+              Agregar asignación
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+
+
+</ion-content>

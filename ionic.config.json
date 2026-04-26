@@ -1,0 +1,7 @@
+{
+  "name": "test-lizeth",
+  "integrations": {
+    "cordova": {}
+  },
+  "type": "angular-standalone"
+}
