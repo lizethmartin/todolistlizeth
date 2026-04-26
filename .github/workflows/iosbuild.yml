@@ -65,7 +65,7 @@ jobs:
           sleep 15
           APP_PATH=$(find platforms/ios/build/Debug-iphonesimulator -name "*.app" -type d | head -1)
           xcrun simctl install $UDID "$APP_PATH"
-          xcrun simctl io $UDID recordVideo --type=mp4 demo.mp4 &
+          xcrun simctl io $UDID recordVideo --codec=h264 "$GITHUB_WORKSPACE/demo.mov" &
           RECORD_PID=$!
           xcrun simctl launch $UDID io.ionic.starter
           sleep 25
@@ -75,5 +75,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-demo-video
-          path: demo.mp4
+          path: ${{ github.workspace }}/demo.mov
           if-no-files-found: warn
