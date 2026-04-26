@@ -1,0 +1,39 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [feature/android-ios-config]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Install Ionic y Cordova
+        run: npm install -g @ionic/cli cordova
+      
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
+      
+      - name: Build Angular
+        run: ionic build
+      
+      - name: Add iOS platform
+        run: cordova platform add ios
+      
+      - name: Build iOS Simulator
+        run: cordova build ios --emulator
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-ios-simulator
+          path: platforms/ios/build/emulator/*.app
