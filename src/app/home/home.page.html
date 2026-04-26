@@ -1,16 +1,15 @@
 <ion-header>
   <ion-toolbar color="light">
-    <div class="flex flex-col items-left py-10">
-      <ion-title color="primary">Hola Lizeth! 👋</ion-title>
-      <span class="text-sm opacity-60 pl-6">
+    <div class="flex flex-col items-start px-4 py-10">
+      <span class="text-4xl font-bold" style="color: var(--ion-color-primary)">
+        Hola Lizeth! 👋
+      </span>
+      <span class="text-sm opacity-60">
         Todo empieza con una tarea.
       </span>
     </div>
   </ion-toolbar>
-
-  <!-- -->
 </ion-header>
-
 <ion-content class="ion-padding" [scrollY]="true" [fullscreen]="true">
   <ion-grid>
     <ion-row>
@@ -41,7 +40,8 @@
               <ion-button color="warning" (click)="editCategory()" class="ion-margin-top capitalize">
                 Editar categoría
               </ion-button>
-              <ion-button color="danger" fill="outline" (click)="showCard('edit',false)" class="ion-margin-top capitalize">
+              <ion-button color="danger" fill="outline" (click)="showCard('edit',false)"
+                class="ion-margin-top capitalize">
                 Cancelar
               </ion-button>
             </div>
@@ -71,7 +71,8 @@
               <ion-button expand="block" (click)="add(false)" class="ion-margin-top capitalize">
                 Crear categoría
               </ion-button>
-              <ion-button color="danger" fill="outline" (click)="showCard('category',false)" class="ion-margin-top capitalize">
+              <ion-button color="danger" fill="outline" (click)="showCard('category',false)"
+                class="ion-margin-top capitalize">
                 Cancelar
               </ion-button>
             </div>
@@ -113,7 +114,8 @@
               <ion-button color="primary" (click)="add(true)" class="ion-margin-top capitalize">
                 Crear tarea
               </ion-button>
-              <ion-button color="danger" fill="outline" (click)="showCard('task',false)" class="ion-margin-top capitalize">
+              <ion-button color="danger" fill="outline" (click)="showCard('task',false)"
+                class="ion-margin-top capitalize">
                 Cancelar
               </ion-button>
             </div>
@@ -124,22 +126,24 @@
       <!-- To Do List -->
       <ion-col size="12" size-md="8">
         <!-- Category Filter - if feature flag is true -->
-        <ion-toolbar *ngIf="flags.showFilters$ | async">
-          <div class="flex flex-col items-center toolbar-background py-2">
-            <ion-text color="primary">
+        <ng-container *ngIf="flags.showFilters$ | async">
+          <ion-toolbar color="light">
+            <ion-text color="primary" class="flex justify-center">
               Filtra tus tareas según el área de tu vida.
             </ion-text>
-          </div>
-          <ion-segment [scrollable]="true" [value]="filteredCategory.id"
-            (ionChange)="filter($event.detail.value?.toString() ?? 'all')">
-            <ion-segment-button value="all">
-              <ion-label>Categorías</ion-label>
-            </ion-segment-button>
-            <ion-segment-button *ngFor="let cat of categories" [value]="cat.id">
-              <ion-label>{{ cat.name }}</ion-label>
-            </ion-segment-button>
-          </ion-segment>
-        </ion-toolbar>
+          </ion-toolbar>
+          <ion-toolbar>
+            <ion-segment [scrollable]="true" [value]="filteredCategory.id"
+              (ionChange)="filter($event.detail.value?.toString() ?? 'all')">
+              <ion-segment-button value="all">
+                <ion-label>Categorías</ion-label>
+              </ion-segment-button>
+              <ion-segment-button *ngFor="let cat of categories" [value]="cat.id">
+                <ion-label>{{ cat.name }}</ion-label>
+              </ion-segment-button>
+            </ion-segment>
+          </ion-toolbar>
+        </ng-container>
 
         <!-- Filtered Category Options-->
         <ion-toolbar color="light">
@@ -152,13 +156,11 @@
           </ion-buttons>
 
           <!-- Category name -->
-          <div class="py-3 flex flex-col justify-center">
-            <ion-title class="ion-text-center">
-              {{filteredCategory.name}}
-            </ion-title>
-            <ion-note class="ion-text-center">
+          <div class="flex flex-col items-center justify-center">
+            <span class="font-semibold text-base">{{ filteredCategory.name }}</span>
+            <span class="text-xs opacity-60">
               Completaste {{ tasks.length - outstanding }} de {{ tasks.length }} tareas hoy.
-            </ion-note>
+            </span>
           </div>
 
           <!-- Rigth button -->
@@ -170,14 +172,17 @@
           </ion-buttons>
         </ion-toolbar>
 
-
         <!-- List of Tasks-->
         <ion-grid color="light" *ngIf="tasks.length > 0">
           <ion-row>
             <ion-col size="12" size-md="6" size-lg="4" *ngFor="let task of tasks">
               <ion-card>
                 <ion-card-header>
-                  <ion-card-subtitle class="card-header">
+                  <ion-card-title [class.completed]="task.completed" class="scroll-title">
+                    {{ task.title }}
+                  </ion-card-title>
+
+                  <ion-card-subtitle class="card-header-subtitle">
                     <ion-badge [color]="getCategoryColor(task.categoryId)" class="mb-1">
                       {{ getCategoryName(task.categoryId) }}
                     </ion-badge>
@@ -185,21 +190,17 @@
                       {{ task.completed ? 'Completada' : 'Pendiente' }}
                     </ion-badge>
                   </ion-card-subtitle>
-
-                  <ion-card-title [class.completed]="task.completed" class="scroll-title">
-                    {{ task.title }}
-                  </ion-card-title>
-
                 </ion-card-header>
 
                 <ion-card-content>
                   <div class="flex gap-2 justify-center">
                     <ion-button [color]="!task.completed ? 'primary' : 'warning'" (click)="completeTask(task.id)"
                       class="ion-margin-top capitalize">
-                      {{!task.completed ? 'Completar tarea' : 'Tarea pendiente'}}
+                      {{!task.completed ? 'Completar tarea' : 'Marcar como pendiente'}}
                     </ion-button>
-                    <ion-button color="danger" fill="outline" (click)="delete(task.id, true)" class="ion-margin-top capitalize">
-                      <ion-icon name="trash-outline"></ion-icon>&nbsp; Eliminar
+                    <ion-button color="danger" fill="outline" (click)="delete(task.id, true)"
+                      class="ion-margin-top capitalize">
+                      <ion-icon name="trash-outline" slot="start"></ion-icon> Eliminar
                     </ion-button>
                   </div>
                 </ion-card-content>

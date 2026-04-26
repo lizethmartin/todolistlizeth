@@ -2,22 +2,37 @@ ion-content {
   --keyboard-offset: 0px;
 }
 
+ion-card-header {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 .info-container {
   display: flex;
   flex-direction: column;
 }
+
 .card-header {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
+
+.card-header-subtitle {
+  order: 1;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
 .right {
   text-align: right;
 }
 
 .scroll-title {
-  min-height: 6.2vh;   
-  max-height: 6.2vh;  
-  overflow-y: auto;   
+  min-height: 6.2vh;
+  max-height: 6.2vh;
+  overflow-y: auto;
+  order: 2;
 }
