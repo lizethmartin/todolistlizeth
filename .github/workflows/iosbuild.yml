@@ -27,7 +27,9 @@ jobs:
         run: ionic build
       
       - name: Add iOS platform
-        run: cordova platform add ios
+        run: |
+          cordova platform remove ios || true
+          cordova platform add ios
 
       - name: Fix deployment target
         run: |
