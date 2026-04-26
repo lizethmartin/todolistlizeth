@@ -37,14 +37,17 @@ jobs:
       
       - name: Build iOS Simulator
         run: cordova build ios --emulator
-      
+
+      - name: Find app file
+        run: find platforms/ios -name "*.app" -type d 2>/dev/null || echo "No .app found"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-ios-simulator
-          path: platforms/ios/build/emulator/
+          path: platforms/ios/build/
           if-no-files-found: warn
-      
+          
       - name: Find app file
         run: find platforms/ios/build -name "*.app" -type d
 
