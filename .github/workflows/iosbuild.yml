@@ -28,6 +28,10 @@ jobs:
       
       - name: Add iOS platform
         run: cordova platform add ios
+
+      - name: Fix deployment target
+        run: |
+          find platforms/ios -name "project.pbxproj" -exec sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 11.0/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' {} \;
       
       - name: Build iOS Simulator
         run: cordova build ios --emulator
