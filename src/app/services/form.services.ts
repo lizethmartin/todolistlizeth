@@ -36,8 +36,8 @@ export class FormService {
     }
 
     const result = await action();
-    await this.showToast(successMsg, 'success');
     reset();
+    await this.showToast(successMsg, 'success');
     return result;
   }
 

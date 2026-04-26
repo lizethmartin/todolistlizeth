@@ -6,6 +6,8 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class TaskService {
     private _tasks = new BehaviorSubject<Task[]>([]);
+    private initialized = false;
+
     tasks$ = this._tasks.asObservable();
 
     constructor(private storage: Storage) {
@@ -13,9 +15,11 @@ export class TaskService {
     }
 
     async init() {
+        if (this.initialized) return;
         await this.storage.create();
-        const guardados = await this.storage.get('tasks');
-        this._tasks.next(guardados ?? []);
+        this.initialized = true;
+        const saved = await this.storage.get('tasks');
+        this._tasks.next(saved ?? []);
     }
 
     getAll(): Task[] {
@@ -30,11 +34,11 @@ export class TaskService {
     async addTask(title: string, categoryId: string) {
         if (!title.trim()) return;
         const nuevo: Task = {
-        id: Date.now().toString(),
-        title: title.trim(),
-        completed: false,
-        categoryId,
-        createdDate: Date.now()
+            id: Date.now().toString(),
+            title: title.trim(),
+            completed: false,
+            categoryId,
+            createdDate: Date.now()
         };
         const lista = [...this._tasks.value, nuevo];
         await this.save(lista);

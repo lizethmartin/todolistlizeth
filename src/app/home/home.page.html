@@ -1,24 +1,139 @@
 <ion-header>
   <ion-toolbar color="light">
-    <div class="py-10">
-      <ion-title color="primary" slot="start">Hola Lizeth!</ion-title>
+    <div class="flex flex-col items-left py-10">
+      <ion-title color="primary">Hola Lizeth! 👋</ion-title>
+      <span class="text-sm opacity-60 pl-6">
+        Todo empieza con una tarea.
+      </span>
     </div>
   </ion-toolbar>
 
   <!-- -->
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding" [scrollY]="true" [fullscreen]="true">
   <ion-grid>
     <ion-row>
+      <!-- Actions -->
+      <ion-col size="12" size-md="4">
+        <div class="flex gap-4 items-center justify-center align-center">
+          <ion-button color="tertiary-light" fill="outline" (click)="showCard('category',true)"
+            class="ion-margin-top capitalize">
+            Crear categoría
+          </ion-button>
+          <ion-button color="primary" fill="outline" (click)="showCard('task',true)" class="ion-margin-top capitalize">
+            Crear tarea
+          </ion-button>
+        </div>
+        <!--Edit Category-->
+        <ion-card *ngIf="showEditCard">
+          <ion-card-header>
+            <ion-card-title>Editar</ion-card-title>
+            <ion-card-subtitle>Editar categoría - {{filteredCategory.name}}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item lines="full">
+              <ion-input labelPlacement="floating" [(ngModel)]="updateCategory.name" (keyup.enter)="editCategory()">
+                <div slot="label">Nombre</div>
+              </ion-input>
+            </ion-item>
+            <div class="ion-text-end">
+              <ion-button color="warning" (click)="editCategory()" class="ion-margin-top capitalize">
+                Editar categoría
+              </ion-button>
+              <ion-button color="danger" fill="outline" (click)="showCard('edit',false)" class="ion-margin-top capitalize">
+                Cancelar
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!--Create Category-->
+        <ion-card *ngIf="showCategoryCard">
+          <!-- Title-->
+          <ion-card-header>
+            <ion-card-title>Organiza tu lista</ion-card-title>
+            <ion-card-subtitle>Agrega una nueva categoría</ion-card-subtitle>
+          </ion-card-header>
+          <!-- Form & Buttons-->
+          <ion-card-content>
+            <!-- Input name-->
+            <ion-item lines="full">
+              <ion-input labelPlacement="floating" [(ngModel)]="newCategory" placeholder="Nueva categoría..."
+                (keyup.enter)="add(false)">
+                <div slot="label">Nombre de la categoría <ion-text color="danger" class="text-sm">(Requerido)</ion-text>
+                </div>
+              </ion-input>
+            </ion-item>
+
+            <!-- Buttons -->
+            <div class="flex gap-4 justify-end">
+              <ion-button expand="block" (click)="add(false)" class="ion-margin-top capitalize">
+                Crear categoría
+              </ion-button>
+              <ion-button color="danger" fill="outline" (click)="showCard('category',false)" class="ion-margin-top capitalize">
+                Cancelar
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!--Create Task-->
+        <ion-card *ngIf="showTaskCard">
+          <!-- Title -->
+          <ion-card-header>
+            <ion-card-title>Agrega una nueva tarea</ion-card-title>
+            <ion-card-subtitle>Escribe eso que no quieres olvidar</ion-card-subtitle>
+          </ion-card-header>
+
+          <ion-card-content>
+            <!-- Show category select if feature flag is true-->
+            <div *ngIf="flags.showCategories$ | async">
+              <ion-item lines="full">
+                <ion-select label="Categoría" label-placement="floating" [(ngModel)]="selectedCategory"
+                  interface="popover" placeholder="Seleccionar categoría">
+                  <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
+                    {{ cat.name }}
+                  </ion-select-option>
+                </ion-select>
+              </ion-item>
+              <ion-text color="medium" class="flex justify-start pl-4" lines="full">
+                <small>Si no selecciona una categoría se Creara a otros.</small>
+              </ion-text>
+            </div>
+            <!-- Input name -->
+            <ion-item lines="full">
+              <ion-input (focus)="onInputFocus()" labelPlacement="floating" [(ngModel)]="newTask"
+                placeholder="Nueva tarea..." (keyup.enter)="add(true)">
+                <div slot="label">Tarea <ion-text color="danger" class="text-sm">(Requerido)</ion-text></div>
+              </ion-input>
+            </ion-item>
+            <!-- Buttons -->
+            <div class="flex gap-4 justify-end">
+              <ion-button color="primary" (click)="add(true)" class="ion-margin-top capitalize">
+                Crear tarea
+              </ion-button>
+              <ion-button color="danger" fill="outline" (click)="showCard('task',false)" class="ion-margin-top capitalize">
+                Cancelar
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
       <!-- To Do List -->
       <ion-col size="12" size-md="8">
         <!-- Category Filter - if feature flag is true -->
-        <ion-toolbar *ngIf="flags.showFilters">
+        <ion-toolbar *ngIf="flags.showFilters$ | async">
+          <div class="flex flex-col items-center toolbar-background py-2">
+            <ion-text color="primary">
+              Filtra tus tareas según el área de tu vida.
+            </ion-text>
+          </div>
           <ion-segment [scrollable]="true" [value]="filteredCategory.id"
             (ionChange)="filter($event.detail.value?.toString() ?? 'all')">
             <ion-segment-button value="all">
-              <ion-label>Todas</ion-label>
+              <ion-label>Categorías</ion-label>
             </ion-segment-button>
             <ion-segment-button *ngFor="let cat of categories" [value]="cat.id">
               <ion-label>{{ cat.name }}</ion-label>
@@ -27,58 +142,63 @@
         </ion-toolbar>
 
         <!-- Filtered Category Options-->
-        <ion-toolbar>
+        <ion-toolbar color="light">
           <!-- Left button -->
           <ion-buttons slot="start" *ngIf="filteredCategory.id !=='others' && filteredCategory.id !=='all'">
-            <ion-button color="warning" fill="outline" shape="round" (click)="changeDataCategory()" class="ion-margin-top" slot="end">
-              <ion-icon name="create-outline" slot="icon-only" /> Editar
+            <ion-button color="warning" fill="outline" shape="round" (click)="showCard('edit',true)"
+              class="ion-margin-top pl-2 capitalize">
+              <ion-icon name="create-outline" slot="icon-only" />
             </ion-button>
           </ion-buttons>
 
           <!-- Category name -->
-          <ion-title class="ion-text-center">
-            {{filteredCategory.name}}
-          </ion-title>
+          <div class="py-3 flex flex-col justify-center">
+            <ion-title class="ion-text-center">
+              {{filteredCategory.name}}
+            </ion-title>
+            <ion-note class="ion-text-center">
+              Completaste {{ tasks.length - outstanding }} de {{ tasks.length }} tareas hoy.
+            </ion-note>
+          </div>
 
           <!-- Rigth button -->
           <ion-buttons slot="end" *ngIf="filteredCategory.id !=='others' && filteredCategory.id !=='all'">
-            <ion-button color="danger" slot="icon-only" (click)="deleteCategory(filteredCategory)" class="ion-margin-top">
+            <ion-button color="danger" slot="icon-only" (click)="deleteCategory(filteredCategory)"
+              class="ion-margin-top capitalize">
               <ion-icon name="trash-outline" slot="icon-only" />
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
 
-        <ion-note class="ion-padding-start">
-          {{ pendientes }} pendiente(s) de {{ tasks.length }}
-        </ion-note>
 
-        <!-- Filtered tasks Options-->
-        <ion-grid>
+        <!-- List of Tasks-->
+        <ion-grid color="light" *ngIf="tasks.length > 0">
           <ion-row>
             <ion-col size="12" size-md="6" size-lg="4" *ngFor="let task of tasks">
               <ion-card>
                 <ion-card-header>
-                  <ion-card-subtitle class="right">
+                  <ion-card-subtitle class="card-header">
                     <ion-badge [color]="getCategoryColor(task.categoryId)" class="mb-1">
                       {{ getCategoryName(task.categoryId) }}
                     </ion-badge>
-                  </ion-card-subtitle>
-                  <div class="card-header">
-                    <ion-card-title [class.completed]="task.completed"  class="scroll-title">
-                      {{ task.title }}
-                    </ion-card-title>
                     <ion-badge [color]="task.completed ? 'success-light' : 'danger-light'">
                       {{ task.completed ? 'Completada' : 'Pendiente' }}
                     </ion-badge>
-                  </div>
+                  </ion-card-subtitle>
+
+                  <ion-card-title [class.completed]="task.completed" class="scroll-title">
+                    {{ task.title }}
+                  </ion-card-title>
+
                 </ion-card-header>
 
                 <ion-card-content>
-                  <div class="ion-text-center">
-                    <ion-button [color]="!task.completed ? 'success' : 'warning'" (click)="completeTask(task.id)" class="ion-margin-top">
+                  <div class="flex gap-2 justify-center">
+                    <ion-button [color]="!task.completed ? 'primary' : 'warning'" (click)="completeTask(task.id)"
+                      class="ion-margin-top capitalize">
                       {{!task.completed ? 'Completar tarea' : 'Tarea pendiente'}}
                     </ion-button>
-                    <ion-button color="danger" fill="outline" (click)="delete(task.id, true)" class="ion-margin-top">
+                    <ion-button color="danger" fill="outline" (click)="delete(task.id, true)" class="ion-margin-top capitalize">
                       <ion-icon name="trash-outline"></ion-icon>&nbsp; Eliminar
                     </ion-button>
                   </div>
@@ -87,78 +207,22 @@
             </ion-col>
           </ion-row>
         </ion-grid>
-      </ion-col>
 
-      <!-- Actions -->
-      <ion-col size="12" size-md="4">
-        <ion-card *ngIf="editCategory">
-          <ion-card-header>
-            <ion-card-title>Editar</ion-card-title>
-            <ion-card-subtitle>Editar categoría - {{filteredCategory.name}}</ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-item lines="full">
-              <ion-input labelPlacement="floating" [(ngModel)]="updateCategory.name"
-                (keyup.enter)="sendEditedCategory()">
-                <div slot="label">Nombre</div>
-              </ion-input>
-            </ion-item>
-            <div class="ion-text-center">
-              <ion-button color="warning" (click)="sendEditedCategory()" class="ion-margin-top">
-                Editar categoría
-              </ion-button>
-              <ion-button color="danger" fill="outline" (click)="cancelEditedCategory()" class="ion-margin-top">
-                Cancelar
-              </ion-button>
-            </div>
-          </ion-card-content>
-        </ion-card>
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Nueva categoría</ion-card-title>
-            <ion-card-subtitle>Agrega una nueva categoría</ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-item lines="full">
-              <ion-input labelPlacement="floating" [(ngModel)]="newCategory" placeholder="Nueva categoría..."
-                (keyup.enter)="add(false)">
-                <div slot="label">Nombre <ion-text color="danger" class="text-sm">(Requerido)</ion-text></div>
-              </ion-input>
-            </ion-item>
-            <ion-button expand="block" (click)="add(false)" class="ion-margin-top">
-              Agregar categoría
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Nueva asignación</ion-card-title>
-            <ion-card-subtitle>Agrega una nueva asignación</ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <!-- Show category select if feature flag is true-->
-            <ion-item *ngIf="flags.showCategories" lines="full">
-              <ion-select label="Categoría" label-placement="floating" [(ngModel)]="selectedCategory"
-                interface="popover" placeholder="Select fruit">
-                <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
-                  {{ cat.name }}
-                </ion-select-option>
-              </ion-select>
-            </ion-item>
-            <ion-text color="medium" class="pl-4" *ngIf="flags.showCategories" lines="full">
-              <small>Si no selecciona una categoría se agregara a otros.</small>
-            </ion-text>
-            <ion-item lines="full">
-              <ion-input labelPlacement="floating" [(ngModel)]="newTask" placeholder="Nueva asignación..."
-                (keyup.enter)="add(true)">
-                <div slot="label">Asignación <ion-text color="danger" class="text-sm">(Requerido)</ion-text></div>
-              </ion-input>
-            </ion-item>
-            <ion-button expand="block" (click)="add(true)" class="ion-margin-top">
-              Agregar asignación
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
+        <!-- Add new task when doesn't exist -->
+        <div *ngIf="tasks.length === 0" class="flex flex-col items-center justify-center align-center gap-3 mt-16 px-8">
+          <ion-text color="tertiary" class="text-3xl text-center font-semibold">
+            Agrega tu primera tarea
+            <br> y libérate un poco.
+          </ion-text>
+
+          <ion-text color="medium" class="text-center text-sm">
+            👉 Esto transforma el <b>vacío en oportunidad</b>, no en <b>“nada”</b>.
+          </ion-text>
+
+          <ion-button color="success" fill="outline" (click)="showCard('task',true)" class="ion-margin-top capitalize">
+            Crear tarea
+          </ion-button>
+        </div>
       </ion-col>
     </ion-row>
   </ion-grid>

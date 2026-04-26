@@ -12,11 +12,21 @@ import { FeatureFlagService } from './services/feature-falg.services';
 export class AppComponent implements OnInit {
   constructor(
     private platform: Platform,
-    private featureFlag: FeatureFlagService,
+    private flag: FeatureFlagService,
   ) {}
 
   async ngOnInit() {
     await this.platform.ready();
-    await this.featureFlag.init();
+    await this.flag.init();
+
+    // Pausa polling cuando app va al fondo
+    this.platform.pause.subscribe(() => {
+      this.flag.stopPolling();
+    });
+
+    // Reanuda cuando vuelve al frente
+    this.platform.resume.subscribe(async () => {
+      await this.flag.init();
+    });
   }
 }

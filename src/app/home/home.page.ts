@@ -1,4 +1,12 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -9,9 +17,7 @@ import {
   IonItem,
   IonInput,
   IonButton,
-  IonList,
   IonLabel,
-  IonCheckbox,
   IonBadge,
   IonNote,
   IonSegment,
@@ -72,20 +78,26 @@ import { FormService } from '../services/form.services';
     IonCardTitle,
     IonButtons,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
+  @ViewChild(IonContent) content!: IonContent;
+
   newTask = '';
   newCategory = '';
   updateCategory: Category = { id: '', name: '' };
-  editCategory: boolean = false;
+  showEditCard: boolean = false;
+  showTaskCard: boolean = false;
+  showCategoryCard: boolean = false;
   selectedCategory = 'others';
-  filteredCategory: Category = { id: 'all', name: 'Todas las categorias' };
+  filteredCategory: Category = { id: 'all', name: 'Categorias' };
   categories: Category[] = [];
   tasks: Task[] = [];
 
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(
     public taskService: TaskService,
@@ -98,6 +110,18 @@ export class HomePage implements OnInit {
   }
 
   ngOnInit() {
+    this.flags.showCategories$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.cdr.markForCheck();
+      });
+
+    this.flags.showFilters$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.cdr.markForCheck();
+      });
+
     this.categoryService.categories$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((categories) => {
@@ -109,11 +133,18 @@ export class HomePage implements OnInit {
         if (categories.length > 0 && !this.selectedCategory) {
           this.selectedCategory = 'others';
         }
+        this.cdr.markForCheck();
       });
 
     this.taskService.tasks$.subscribe(() => {
       this.filter('all');
     });
+  }
+
+  onInputFocus() {
+    setTimeout(() => {
+      this.content.scrollToBottom(300);
+    }, 300);
   }
 
   async add(task: boolean) {
@@ -124,39 +155,60 @@ export class HomePage implements OnInit {
         : () => this.categoryService.addCategory(this.newCategory, 'tertiary'),
       `Escribe una ${task ? 'tarea ' : 'categoría'} primero`,
       `${task ? 'Tarea ' : 'Categoría'} agregada`,
-      task ? () => (this.newTask = '') : () => (this.newCategory = ''),
+      task
+        ? () => {
+            this.newTask = '';
+            this.selectedCategory = 'others';
+            this.showTaskCard = false;
+            this.cdr.detectChanges();
+          }
+        : () => {
+            this.newCategory = '';
+            this.showCategoryCard = false;
+            this.cdr.detectChanges();
+          },
     );
   }
 
-  changeDataCategory() {
-    this.editCategory = true;
-    this.updateCategory = structuredClone(this.filteredCategory);
+  showCard(action: string, status: boolean) {
+    switch (action) {
+      case 'edit':
+        this.showEditCard = status;
+        this.updateCategory = structuredClone(this.filteredCategory);
+        break;
+      case 'task':
+        this.showTaskCard = status;
+        break;
+      case 'category':
+        this.showCategoryCard = status;
+        break;
+      default:
+        break;
+    }
+    this.cdr.markForCheck();
   }
 
-  cancelEditedCategory() {
-    this.editCategory = false;
-  }
-
-  async sendEditedCategory() {
+  async editCategory() {
     try {
-      await this.categoryService.editCategory(
+      await this.categoryService.showEditCard(
         this.updateCategory.id,
         this.updateCategory.name.trim(),
       );
       this.formService.showToast('Categoría actualizada', 'success');
-      this.editCategory = false;
+      this.showEditCard = false;
+      this.cdr.markForCheck();
     } catch (error) {
       await this.formService.showToast('Ocurrió un error', 'warning');
     }
   }
 
-
   filter(categoryId: string | number | undefined) {
     const id = categoryId?.toString() ?? 'all';
     this.filteredCategory = this.categories.find(
       (category) => category.id === id,
-    ) ?? { id: 'all', name: 'Todas las categorias' };
+    ) ?? { id: 'all', name: 'Categorias' };
     this.tasks = this.taskService.filterCategory(id);
+    this.cdr.markForCheck();
   }
 
   async completeTask(id: string) {
@@ -166,6 +218,7 @@ export class HomePage implements OnInit {
       ? 'Tarea completada ✓'
       : 'Tarea marcada como pendiente';
     await this.formService.showToast(mensaje, 'success');
+    this.cdr.markForCheck();
   }
 
   async deleteCategory(cat: Category) {
@@ -222,7 +275,7 @@ export class HomePage implements OnInit {
     return this.categories.find((c) => c.id === categoryId)?.color ?? 'medium';
   }
 
-  get pendientes(): number {
+  get outstanding(): number {
     return this.tasks.filter((t) => !t.completed).length;
   }
 }

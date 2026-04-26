@@ -6,6 +6,8 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
     private _categories = new BehaviorSubject<Category[]>([]);
+    private initialized = false;
+    
     categories$ = this._categories.asObservable();
 
     private readonly DEFAULT_CATEGORIES: Category[] = [
@@ -19,7 +21,9 @@ export class CategoryService {
     }
 
     async init() {
+        if (this.initialized) return;
         await this.storage.create();
+        this.initialized = true;
         const saved = await this.storage.get('categories');
         this._categories.next(saved ?? this.DEFAULT_CATEGORIES);
     }
@@ -39,7 +43,7 @@ export class CategoryService {
         this._categories.next(list);
     }
 
-    async editCategory(id: string, name: string) {
+    async showEditCard(id: string, name: string) {
         const list = this._categories.value.map((c) => c.id === id ? { ...c, name } : c);
         await this.storage.set('categories', list);
         this._categories.next(list);
