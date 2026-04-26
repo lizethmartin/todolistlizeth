@@ -8,9 +8,9 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
       
@@ -33,7 +33,7 @@ jobs:
         run: cordova build ios --emulator
       
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-ios-simulator
           path: platforms/ios/build/emulator/*.app
